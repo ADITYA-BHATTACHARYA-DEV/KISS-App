@@ -44,11 +44,17 @@ class _HomeScreenState extends State<HomeScreen> {
   </ScreenOverlay>
 </kml>
 ''';
+
     final escapedKml = kml.replaceAll("'", "\\'");
-    debugPrint("🛰️ Sending KML to LG...");
+
+    // Debug log to ensure the text is being processed correctly
+    debugPrint("🛰️ Sending KML to LG... Text: $text");
+
     await _sshService.clearAllKml();
     await _sshService.sendKMLWithText(escapedKml);
-    debugPrint("✅ KML sent!");
+
+    // Log successful KML sending
+    debugPrint("✅ KML sent to LG with text: $text");
   }
 
   void _sendMessage(String text) async {
@@ -66,6 +72,7 @@ class _HomeScreenState extends State<HomeScreen> {
         _isProcessing = false;
       });
 
+      // Send the assistant's response to LG
       await _displayOnLG(response);
       await _handleLocationFromText(text);
 
