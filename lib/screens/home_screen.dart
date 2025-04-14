@@ -18,6 +18,7 @@ class _HomeScreenState extends State<HomeScreen> {
   final SSH _sshService = SSH();
   bool _isProcessing = false;
   TextEditingController _controller = TextEditingController();
+  bool _isKmlDisplayed = false;
 
   @override
   void initState() {
@@ -29,33 +30,73 @@ class _HomeScreenState extends State<HomeScreen> {
     await _sshService.connectToLG();
   }
 
-  Future<void> _displayOnLG(String text) async {
-    final kml = '''
+ Future<void> _displayOnLG(String text) async {
+  // Publicly available test image
+  const imageUrl = 'https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEjzI4JzY6oUy-dQaiW-HLmn5NQ7qiw7NUOoK-2cDU9cI6JwhPrNv0EkCacuKWFViEgXYrCFzlbCtHZQffY6a73j6_ATFjfeU7r6OxXxN5K8sGjfOlp3vvd6eCXZrozlu34fUG5_cKHmzZWa4axb-vJRKjLr2tryz0Zw30gTv3S0ET57xsCiD25WMPn3wA/s800/LIQUIDGALAXYLOGO.png';
+
+  final kml = '''
 <?xml version="1.0" encoding="UTF-8"?>
 <kml xmlns="http://www.opengis.net/kml/2.2">
   <ScreenOverlay>
-    <name>ResponseOverlay</name>
+    <name>ImageOverlay</name>
     <Icon>
-      <href>http://lg1:81/text2kml?text=${Uri.encodeComponent(text)}</href>
+      <href>$imageUrl</href>
     </Icon>
     <overlayXY x="0.5" y="0.5" xunits="fraction" yunits="fraction"/>
     <screenXY x="0.5" y="0.5" xunits="fraction" yunits="fraction"/>
-    <size x="0" y="0" xunits="pixels" yunits="pixels"/>
+    <size x="0.5" y="0.5" xunits="fraction" yunits="fraction"/>
   </ScreenOverlay>
 </kml>
 ''';
 
-    final escapedKml = kml.replaceAll("'", "\\'");
+  final escapedKml = kml.replaceAll("'", "\\'");
 
-    // Debug log to ensure the text is being processed correctly
-    debugPrint("🛰️ Sending KML to LG... Text: $text");
+  debugPrint("🛰️ Sending KML to LG with image URL: $imageUrl");
 
-    await _sshService.clearAllKml();
-    await _sshService.sendKMLWithText(escapedKml);
+  await _sshService.clearAllKml();
+  await _sshService.sendKMLWithText(escapedKml);
 
-    // Log successful KML sending
-    debugPrint("✅ KML sent to LG with text: $text");
+  debugPrint("✅ KML image overlay sent to LG");
+}
+
+  Future<void> _removeKmlOverlay() async {
+  final emptyKml = '''
+<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2">
+  <ScreenOverlay>
+    <name>ClearOverlay</name>
+    <Icon>
+      <href></href>
+    </Icon>
+    <overlayXY x="0" y="0" xunits="fraction" yunits="fraction"/>
+    <screenXY x="0" y="0" xunits="fraction" yunits="fraction"/>
+    <size x="0" y="0" xunits="fraction" yunits="fraction"/>
+  </ScreenOverlay>
+</kml>
+''';
+
+  final escapedKml = emptyKml.replaceAll("'", "\\'");
+  debugPrint("🧹 Sending empty KML to clear LG overlay...");
+
+  await _sshService.clearAllKml();
+  await _sshService.sendKMLWithText(escapedKml);
+
+  debugPrint("✅ Empty KML sent, overlay removed");
+}
+
+
+ void _toggleKmlOverlay() async {
+  setState(() {
+    _isKmlDisplayed = !_isKmlDisplayed;
+  });
+
+  if (_isKmlDisplayed) {
+    await _displayOnLG("This is a test overlay!");
+  } else {
+    await _removeKmlOverlay();
   }
+}
+
 
   void _sendMessage(String text) async {
     if (text.isEmpty) return;
@@ -87,51 +128,34 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  // Future<void> _handleLocationFromText(String userInput) async {
-  //   List<String> knownPlaces = [
-  //     'India', 'Brazil', 'USA', 'France', 'Germany',
-  //     'Tokyo', 'London', 'China', 'Mount Everest', 'New York',
-  //     'Africa', 'Canada', 'Australia', 'Japan', 'Russia'
-  //   ];
+  Future<void> _handleLocationFromText(String userInput) async {
+    final placeRegex = RegExp(r'\b([A-Z][a-z]+(?:\s[A-Z][a-z]+)*)\b');
+    final matches = placeRegex.allMatches(userInput);
 
-  //   for (final place in knownPlaces) {
-  //     if (userInput.toLowerCase().contains(place.toLowerCase())) {
-  //       debugPrint("🎯 Location matched: $place");
-  //       await _sshService.searchPlace(place);
-  //       break;
-  //     }
-  //   }
-  // }
-Future<void> _handleLocationFromText(String userInput) async {
-  // Use a regular expression to extract potential place names (capitalized words)
-  final placeRegex = RegExp(r'\b([A-Z][a-z]+(?:\s[A-Z][a-z]+)*)\b');
-  final matches = placeRegex.allMatches(userInput);
-
-  if (matches.isNotEmpty) {
-    for (final match in matches) {
-      final place = match.group(0);
-      if (place != null && place.isNotEmpty) {
-        debugPrint("🗺️ Attempting to fly to: $place");
-        await _sshService.searchPlace(place);
-        break;
+    if (matches.isNotEmpty) {
+      for (final match in matches) {
+        final place = match.group(0);
+        if (place != null && place.isNotEmpty) {
+          debugPrint("🗺️ Attempting to fly to: $place");
+          await _sshService.searchPlace(place);
+          break;
+        }
       }
-    }
-  } else {
-    debugPrint("⚠️ No obvious place found in text, trying fallback...");
+    } else {
+      debugPrint("⚠️ No obvious place found in text, trying fallback...");
 
-    // Optionally, ask Gemini to extract a location if the regex fails
-    try {
-      final locationPrompt = "Extract the location from this user input: \"$userInput\". Respond with only the place name.";
-      final extractedPlace = await _geminiService.getResponse(locationPrompt);
-      if (extractedPlace.isNotEmpty) {
-        debugPrint("📍 Gemini suggested: $extractedPlace");
-        await _sshService.searchPlace(extractedPlace);
+      try {
+        final locationPrompt = "Extract the location from this user input: \"$userInput\". Respond with only the place name.";
+        final extractedPlace = await _geminiService.getResponse(locationPrompt);
+        if (extractedPlace.isNotEmpty) {
+          debugPrint("📍 Gemini suggested: $extractedPlace");
+          await _sshService.searchPlace(extractedPlace);
+        }
+      } catch (e) {
+        debugPrint("❌ Failed to extract location using Gemini: $e");
       }
-    } catch (e) {
-      debugPrint("❌ Failed to extract location using Gemini: $e");
     }
   }
-}
 
   @override
   Widget build(BuildContext context) {
@@ -249,10 +273,8 @@ Future<void> _handleLocationFromText(String userInput) async {
             child: Row(
               children: [
                 ElevatedButton(
-                  onPressed: () {
-                    _displayOnLG("This is a test overlay!");
-                  },
-                  child: const Text("Test Overlay"),
+                  onPressed: _toggleKmlOverlay,
+                  child: Text(_isKmlDisplayed ? "Remove Overlay" : "Display Overlay"),
                 ),
                 const SizedBox(width: 12),
                 ElevatedButton(
