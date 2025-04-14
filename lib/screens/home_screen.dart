@@ -87,21 +87,51 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  Future<void> _handleLocationFromText(String userInput) async {
-    List<String> knownPlaces = [
-      'India', 'Brazil', 'USA', 'France', 'Germany',
-      'Tokyo', 'London', 'China', 'Mount Everest', 'New York',
-      'Africa', 'Canada', 'Australia', 'Japan', 'Russia'
-    ];
+  // Future<void> _handleLocationFromText(String userInput) async {
+  //   List<String> knownPlaces = [
+  //     'India', 'Brazil', 'USA', 'France', 'Germany',
+  //     'Tokyo', 'London', 'China', 'Mount Everest', 'New York',
+  //     'Africa', 'Canada', 'Australia', 'Japan', 'Russia'
+  //   ];
 
-    for (final place in knownPlaces) {
-      if (userInput.toLowerCase().contains(place.toLowerCase())) {
-        debugPrint("🎯 Location matched: $place");
+  //   for (final place in knownPlaces) {
+  //     if (userInput.toLowerCase().contains(place.toLowerCase())) {
+  //       debugPrint("🎯 Location matched: $place");
+  //       await _sshService.searchPlace(place);
+  //       break;
+  //     }
+  //   }
+  // }
+Future<void> _handleLocationFromText(String userInput) async {
+  // Use a regular expression to extract potential place names (capitalized words)
+  final placeRegex = RegExp(r'\b([A-Z][a-z]+(?:\s[A-Z][a-z]+)*)\b');
+  final matches = placeRegex.allMatches(userInput);
+
+  if (matches.isNotEmpty) {
+    for (final match in matches) {
+      final place = match.group(0);
+      if (place != null && place.isNotEmpty) {
+        debugPrint("🗺️ Attempting to fly to: $place");
         await _sshService.searchPlace(place);
         break;
       }
     }
+  } else {
+    debugPrint("⚠️ No obvious place found in text, trying fallback...");
+
+    // Optionally, ask Gemini to extract a location if the regex fails
+    try {
+      final locationPrompt = "Extract the location from this user input: \"$userInput\". Respond with only the place name.";
+      final extractedPlace = await _geminiService.getResponse(locationPrompt);
+      if (extractedPlace.isNotEmpty) {
+        debugPrint("📍 Gemini suggested: $extractedPlace");
+        await _sshService.searchPlace(extractedPlace);
+      }
+    } catch (e) {
+      debugPrint("❌ Failed to extract location using Gemini: $e");
+    }
   }
+}
 
   @override
   Widget build(BuildContext context) {
