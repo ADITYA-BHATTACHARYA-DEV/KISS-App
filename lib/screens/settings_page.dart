@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:vermeni/components/connection_flag.dart';
 import 'package:vermeni/connections/ssh.dart';
+import 'package:vermeni/services/gemini_service.dart'; // Import GeminiService
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({Key? key}) : super(key: key);
@@ -13,18 +14,22 @@ class SettingsPage extends StatefulWidget {
 
 class _SettingsPageState extends State<SettingsPage> {
   bool connectionStatus = false;
+  bool isApiKeyValid = false; // Track API key validation status
   late SSH ssh;
+  late GeminiService _geminiService; // Initialize GeminiService
 
   final TextEditingController _ipController = TextEditingController();
   final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _sshPortController = TextEditingController();
   final TextEditingController _rigsController = TextEditingController();
+  final TextEditingController _apiKeyController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
     ssh = SSH();
+    _geminiService = GeminiService(); // Initialize GeminiService
     _loadSettings();
     _connectToLG();
   }
@@ -36,6 +41,7 @@ class _SettingsPageState extends State<SettingsPage> {
     _passwordController.dispose();
     _sshPortController.dispose();
     _rigsController.dispose();
+    _apiKeyController.dispose();
     super.dispose();
   }
 
@@ -61,26 +67,35 @@ class _SettingsPageState extends State<SettingsPage> {
       _passwordController.text = prefs.getString('password') ?? '';
       _sshPortController.text = prefs.getString('sshPort') ?? '';
       _rigsController.text = prefs.getString('numberOfRigs') ?? '';
+      _apiKeyController.text = prefs.getString('apiKey') ?? '';
     });
   }
 
   Future<void> _saveSettings() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.setString('ipAddress', _ipController.text);
+    await prefs.setString('username', _usernameController.text);
+    await prefs.setString('password', _passwordController.text);
+    await prefs.setString('sshPort', _sshPortController.text);
+    await prefs.setString('numberOfRigs', _rigsController.text);
+    await prefs.setString('apiKey', _apiKeyController.text);
+  }
 
-    if (_ipController.text.isNotEmpty) {
-      await prefs.setString('ipAddress', _ipController.text);
-    }
-    if (_usernameController.text.isNotEmpty) {
-      await prefs.setString('username', _usernameController.text);
-    }
-    if (_passwordController.text.isNotEmpty) {
-      await prefs.setString('password', _passwordController.text);
-    }
-    if (_sshPortController.text.isNotEmpty) {
-      await prefs.setString('sshPort', _sshPortController.text);
-    }
-    if (_rigsController.text.isNotEmpty) {
-      await prefs.setString('numberOfRigs', _rigsController.text);
+  Future<void> _validateApiKey() async {
+    try {
+      String apiKey = _apiKeyController.text;
+      if (apiKey.isNotEmpty) {
+        // Validate the API Key using GeminiService
+        bool isValid = await _geminiService.validateApiKey();
+        setState(() {
+          isApiKeyValid = isValid;
+        });
+      }
+    } catch (e) {
+      setState(() {
+        isApiKeyValid = false;
+      });
+      print('Error validating API key: $e');
     }
   }
 
@@ -161,6 +176,23 @@ class _SettingsPageState extends State<SettingsPage> {
                     icon: Icons.memory,
                     keyboardType: TextInputType.number,
                   ),
+                  const SizedBox(height: 16),
+                  _buildTextField(
+                    controller: _apiKeyController,
+                    label: 'Gemini API Key',
+                    hint: 'Enter your Gemini API key',
+                    icon: Icons.vpn_key,
+                    obscureText: false,
+                    onChanged: (_) => _validateApiKey(),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    isApiKeyValid ? 'API Key is valid' : 'Check Your Api Key Before Entering',
+                    style: TextStyle(
+                      color: isApiKeyValid ? Colors.green : Color.fromARGB(255, 238, 250, 2),
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
                   const SizedBox(height: 30),
                   _buildActionButton(
                     label: 'CONNECT TO LG',
@@ -198,50 +230,51 @@ class _SettingsPageState extends State<SettingsPage> {
     );
   }
 
- Widget _buildTextField({
-  required TextEditingController controller,
-  required String label,
-  required String hint,
-  required IconData icon,
-  bool obscureText = false,
-  TextInputType keyboardType = TextInputType.text,
-}) {
-  return Padding(
-    padding: const EdgeInsets.symmetric(vertical: 10.0),
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: const TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.w600,
-            fontSize: 16,
-          ),
-        ),
-        const SizedBox(height: 6),
-        TextField(
-          controller: controller,
-          style: const TextStyle(color: Colors.black),
-          decoration: InputDecoration(
-            filled: true,
-            fillColor: Colors.white,
-            prefixIcon: Icon(icon, color: Colors.deepPurple),
-            hintText: hint,
-            hintStyle: const TextStyle(color: Colors.grey),
-            contentPadding: const EdgeInsets.symmetric(vertical: 18, horizontal: 16),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12.0),
+  Widget _buildTextField({
+    required TextEditingController controller,
+    required String label,
+    required String hint,
+    required IconData icon,
+    bool obscureText = false,
+    TextInputType keyboardType = TextInputType.text,
+    Function(String)? onChanged,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 10.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            style: const TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.w600,
+              fontSize: 16,
             ),
           ),
-          obscureText: obscureText,
-          keyboardType: keyboardType,
-        ),
-      ],
-    ),
-  );
-}
-
+          const SizedBox(height: 6),
+          TextField(
+            controller: controller,
+            style: const TextStyle(color: Colors.black),
+            decoration: InputDecoration(
+              filled: true,
+              fillColor: Colors.white,
+              prefixIcon: Icon(icon, color: Colors.deepPurple),
+              hintText: hint,
+              hintStyle: const TextStyle(color: Colors.grey),
+              contentPadding: const EdgeInsets.symmetric(vertical: 18, horizontal: 16),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12.0),
+              ),
+            ),
+            obscureText: obscureText,
+            keyboardType: keyboardType,
+            onChanged: onChanged,
+          ),
+        ],
+      ),
+    );
+  }
 
   Widget _buildActionButton({
     required String label,
