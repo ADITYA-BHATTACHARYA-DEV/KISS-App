@@ -92,93 +92,105 @@ class _SettingsPageState extends State<SettingsPage> {
         return true;
       },
       child: Scaffold(
+        extendBodyBehindAppBar: true,
         appBar: AppBar(
-          title: const Text('Connection Settings'),
-          backgroundColor: Colors.deepPurple.shade900,
+          title: const Text(
+            'Connection Settings',
+            style: TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+              fontSize: 22,
+            ),
+          ),
+          backgroundColor: Colors.transparent,
+          elevation: 0,
         ),
         body: Container(
+          width: double.infinity,
+          height: double.infinity,
           decoration: const BoxDecoration(
             gradient: LinearGradient(
               colors: [
                 Colors.black,
-                Colors.deepPurple,
+                Color(0xFF4B0082), // Deep purple
                 Colors.blueAccent,
               ],
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
             ),
           ),
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: <Widget>[
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 10),
-                  child: ConnectionFlag(status: connectionStatus),
-                ),
-                _buildTextField(
-                  controller: _ipController,
-                  label: 'IP Address',
-                  hint: 'Enter Master IP',
-                  icon: Icons.computer,
-                  keyboardType: TextInputType.number,
-                ),
-                _buildTextField(
-                  controller: _usernameController,
-                  label: 'LG Username',
-                  hint: 'Enter your username',
-                  icon: Icons.person,
-                ),
-                _buildTextField(
-                  controller: _passwordController,
-                  label: 'LG Password',
-                  hint: 'Enter your password',
-                  icon: Icons.lock,
-                  obscureText: true,
-                ),
-                _buildTextField(
-                  controller: _sshPortController,
-                  label: 'SSH Port',
-                  hint: '22',
-                  icon: Icons.settings_ethernet,
-                  keyboardType: TextInputType.number,
-                ),
-                _buildTextField(
-                  controller: _rigsController,
-                  label: 'No. of LG Rigs',
-                  hint: 'Enter the number of rigs',
-                  icon: Icons.memory,
-                  keyboardType: TextInputType.number,
-                ),
-                const SizedBox(height: 20),
-                _buildActionButton(
-                  label: 'CONNECT TO LG',
-                  icon: Icons.cast,
-                  onPressed: () async {
-                    await _saveSettings();
-                    await _connectToLG();
-                  },
-                ),
-                const SizedBox(height: 20),
-                _buildActionButton(
-                  label: 'SEND COMMAND TO LG',
-                  icon: Icons.send,
-                  onPressed: () async {
-                    try {
-                      await ssh.connectToLG();
-                      SSHSession? execResult = await ssh.execute();
-                      if (execResult != null) {
-                        print('Command executed successfully');
-                      } else {
-                        print('Failed to execute command');
+          child: SafeArea(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  ConnectionFlag(status: connectionStatus),
+                  const SizedBox(height: 16),
+                  _buildTextField(
+                    controller: _ipController,
+                    label: 'IP Address',
+                    hint: 'Enter Master IP',
+                    icon: Icons.computer,
+                    keyboardType: TextInputType.number,
+                  ),
+                  _buildTextField(
+                    controller: _usernameController,
+                    label: 'LG Username',
+                    hint: 'Enter your username',
+                    icon: Icons.person,
+                  ),
+                  _buildTextField(
+                    controller: _passwordController,
+                    label: 'LG Password',
+                    hint: 'Enter your password',
+                    icon: Icons.lock,
+                    obscureText: true,
+                  ),
+                  _buildTextField(
+                    controller: _sshPortController,
+                    label: 'SSH Port',
+                    hint: '22',
+                    icon: Icons.settings_ethernet,
+                    keyboardType: TextInputType.number,
+                  ),
+                  _buildTextField(
+                    controller: _rigsController,
+                    label: 'No. of LG Rigs',
+                    hint: 'Enter the number of rigs',
+                    icon: Icons.memory,
+                    keyboardType: TextInputType.number,
+                  ),
+                  const SizedBox(height: 30),
+                  _buildActionButton(
+                    label: 'CONNECT TO LG',
+                    icon: Icons.cast,
+                    onPressed: () async {
+                      await _saveSettings();
+                      await _connectToLG();
+                    },
+                  ),
+                  const SizedBox(height: 20),
+                  _buildActionButton(
+                    label: 'SEND COMMAND TO LG',
+                    icon: Icons.send,
+                    onPressed: () async {
+                      try {
+                        await ssh.connectToLG();
+                        SSHSession? execResult = await ssh.execute();
+                        if (execResult != null) {
+                          print('Command executed successfully');
+                        } else {
+                          print('Failed to execute command');
+                        }
+                      } catch (e) {
+                        print('Error: $e');
                       }
-                    } catch (e) {
-                      print('Error: $e');
-                    }
-                  },
-                ),
-              ],
+                    },
+                  ),
+                  const SizedBox(height: 40),
+                ],
+              ),
             ),
           ),
         ),
@@ -186,63 +198,74 @@ class _SettingsPageState extends State<SettingsPage> {
     );
   }
 
-  Widget _buildTextField({
-    required TextEditingController controller,
-    required String label,
-    required String hint,
-    required IconData icon,
-    bool obscureText = false,
-    TextInputType keyboardType = TextInputType.text,
-  }) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 10.0),
-      child: TextField(
-        controller: controller,
-        decoration: InputDecoration(
-          filled: true,
-          fillColor: Colors.white,
-          prefixIcon: Icon(icon, color: Colors.deepPurple),
-          labelText: label,
-          hintText: hint,
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12.0),
+ Widget _buildTextField({
+  required TextEditingController controller,
+  required String label,
+  required String hint,
+  required IconData icon,
+  bool obscureText = false,
+  TextInputType keyboardType = TextInputType.text,
+}) {
+  return Padding(
+    padding: const EdgeInsets.symmetric(vertical: 10.0),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: const TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.w600,
+            fontSize: 16,
           ),
         ),
-        obscureText: obscureText,
-        keyboardType: keyboardType,
-      ),
-    );
-  }
+        const SizedBox(height: 6),
+        TextField(
+          controller: controller,
+          style: const TextStyle(color: Colors.black),
+          decoration: InputDecoration(
+            filled: true,
+            fillColor: Colors.white,
+            prefixIcon: Icon(icon, color: Colors.deepPurple),
+            hintText: hint,
+            hintStyle: const TextStyle(color: Colors.grey),
+            contentPadding: const EdgeInsets.symmetric(vertical: 18, horizontal: 16),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12.0),
+            ),
+          ),
+          obscureText: obscureText,
+          keyboardType: keyboardType,
+        ),
+      ],
+    ),
+  );
+}
+
 
   Widget _buildActionButton({
     required String label,
     required IconData icon,
     required VoidCallback onPressed,
   }) {
-    return TextButton(
-      style: TextButton.styleFrom(
-        backgroundColor: Colors.deepPurple,
+    return ElevatedButton.icon(
+      style: ElevatedButton.styleFrom(
+        backgroundColor: Colors.deepPurple.shade700,
+        padding: const EdgeInsets.symmetric(vertical: 16),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(50),
         ),
-        padding: const EdgeInsets.all(16.0),
+      ),
+      icon: Icon(icon, color: Colors.white),
+      label: Text(
+        label,
+        style: const TextStyle(
+          color: Colors.white,
+          fontSize: 18,
+          fontWeight: FontWeight.bold,
+        ),
       ),
       onPressed: onPressed,
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(icon, color: Colors.white),
-          const SizedBox(width: 20),
-          Text(
-            label,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 20,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-        ],
-      ),
     );
   }
 }

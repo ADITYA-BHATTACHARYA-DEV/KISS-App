@@ -53,6 +53,34 @@ class SSH {
       return null;
     }
   }
+
+
+// Future<void> sendKMLWithText(String kmlContent) async {
+//   try {
+//     if (_client == null) {
+//       print('SSH client is not initialized.');
+//       return;
+//     }
+
+//     // Escape the KML content for safe execution
+//     final escapedKML = kmlContent.replaceAll("'", "\\'");
+
+//     // First command: Write the escaped KML content to the text.kml file
+//     await _client!.execute("echo '$escapedKML' > /var/www/html/kml/text.kml");
+
+//     // Second command: Write the URL to the kmls.txt file
+//     await _client!.execute("echo 'http://lg1:81/kml/text.kml' > /var/www/html/kmls.txt");
+
+//     print("KML content with text sent successfully.");
+//   } catch (e) {
+//     print('An error occurred while sending text KML: $e');
+//   }
+// }
+
+
+
+
+
 Future<SSHSession?> sendKMLWithText(String kmlContent) async {
   try {
     if (_client == null) {
