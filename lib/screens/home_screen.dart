@@ -30,11 +30,10 @@ class _HomeScreenState extends State<HomeScreen> {
     await _sshService.connectToLG();
   }
 
- Future<void> _displayOnLG(String text) async {
-  // Publicly available test image
-  const imageUrl = 'https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEjzI4JzY6oUy-dQaiW-HLmn5NQ7qiw7NUOoK-2cDU9cI6JwhPrNv0EkCacuKWFViEgXYrCFzlbCtHZQffY6a73j6_ATFjfeU7r6OxXxN5K8sGjfOlp3vvd6eCXZrozlu34fUG5_cKHmzZWa4axb-vJRKjLr2tryz0Zw30gTv3S0ET57xsCiD25WMPn3wA/s800/LIQUIDGALAXYLOGO.png';
+  Future<void> _displayOnLG(String text) async {
+    const imageUrl = 'https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEjzI4JzY6oUy-dQaiW-HLmn5NQ7qiw7NUOoK-2cDU9cI6JwhPrNv0EkCacuKWFViEgXYrCFzlbCtHZQffY6a73j6_ATFjfeU7r6OxXxN5K8sGjfOlp3vvd6eCXZrozlu34fUG5_cKHmzZWa4axb-vJRKjLr2tryz0Zw30gTv3S0ET57xsCiD25WMPn3wA/s800/LIQUIDGALAXYLOGO.png';
 
-  final kml = '''
+    final kml = '''
 <?xml version="1.0" encoding="UTF-8"?>
 <kml xmlns="http://www.opengis.net/kml/2.2">
   <ScreenOverlay>
@@ -49,18 +48,50 @@ class _HomeScreenState extends State<HomeScreen> {
 </kml>
 ''';
 
+    final escapedKml = kml.replaceAll("'", "\\'");
+    debugPrint("\ud83d\ude80 Sending KML to LG with image URL: $imageUrl");
+    await _sshService.clearAllKml();
+    await _sshService.sendKMLWithText(escapedKml);
+    debugPrint("\u2705 KML image overlay sent to LG");
+  }
+Future<void> _displayTextOverlayOnLG(String text) async {
+  final wrappedText = text.replaceAllMapped(
+    RegExp(r'(.{1,60})(\s|$)'),
+    (match) => '${match.group(1)}\n',
+  );
+
+  final kml = '''
+<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2">
+  <ScreenOverlay>
+    <name>TextOverlay</name>
+    <description><![CDATA[
+      <pre style="font-size:16px; font-family:monospace; color:white; background:black;">
+      $wrappedText
+      </pre>
+    ]]></description>
+    <overlayXY x="0" y="1" xunits="fraction" yunits="fraction"/>
+    <screenXY x="0.05" y="0.95" xunits="fraction" yunits="fraction"/>
+    <size x="0.8" y="0" xunits="fraction" yunits="pixels"/>
+    <Icon>
+      <href></href>
+    </Icon>
+  </ScreenOverlay>
+</kml>
+''';
+
   final escapedKml = kml.replaceAll("'", "\\'");
 
-  debugPrint("🛰️ Sending KML to LG with image URL: $imageUrl");
-
+  debugPrint("📄 Sending screen overlay KML with assistant text");
   await _sshService.clearAllKml();
-  await _sshService.sendKMLWithText(escapedKml);
-
-  debugPrint("✅ KML image overlay sent to LG");
+  await _sshService.sendKMLWithText(escapedKml);  // ⬅️ Send actual KML content, not shell commands
+  debugPrint("✅ Screen overlay sent to LG");
 }
 
+
+
   Future<void> _removeKmlOverlay() async {
-  final emptyKml = '''
+    final emptyKml = '''
 <?xml version="1.0" encoding="UTF-8"?>
 <kml xmlns="http://www.opengis.net/kml/2.2">
   <ScreenOverlay>
@@ -75,28 +106,26 @@ class _HomeScreenState extends State<HomeScreen> {
 </kml>
 ''';
 
-  final escapedKml = emptyKml.replaceAll("'", "\\'");
-  debugPrint("🧹 Sending empty KML to clear LG overlay...");
+    final escapedKml = emptyKml.replaceAll("'", "\\'");
+    debugPrint("\ud83e\uddf9 Sending empty KML to clear LG overlay...");
 
-  await _sshService.clearAllKml();
-  await _sshService.sendKMLWithText(escapedKml);
+    await _sshService.clearAllKml();
+    await _sshService.sendKMLWithText(escapedKml);
 
-  debugPrint("✅ Empty KML sent, overlay removed");
-}
-
-
- void _toggleKmlOverlay() async {
-  setState(() {
-    _isKmlDisplayed = !_isKmlDisplayed;
-  });
-
-  if (_isKmlDisplayed) {
-    await _displayOnLG("This is a test overlay!");
-  } else {
-    await _removeKmlOverlay();
+    debugPrint("\u2705 Empty KML sent, overlay removed");
   }
-}
 
+  void _toggleKmlOverlay() async {
+    setState(() {
+      _isKmlDisplayed = !_isKmlDisplayed;
+    });
+
+    if (_isKmlDisplayed) {
+      await _displayOnLG("This is a test overlay!");
+    } else {
+      await _removeKmlOverlay();
+    }
+  }
 
   void _sendMessage(String text) async {
     if (text.isEmpty) return;
@@ -113,10 +142,8 @@ class _HomeScreenState extends State<HomeScreen> {
         _isProcessing = false;
       });
 
-      // Send the assistant's response to LG
-      await _displayOnLG(response);
+      await _displayTextOverlayOnLG(response);
       await _handleLocationFromText(text);
-
     } catch (e) {
       final errorMessage = 'Sorry, I encountered an error: $e';
       setState(() {
@@ -124,35 +151,35 @@ class _HomeScreenState extends State<HomeScreen> {
         _isProcessing = false;
       });
 
-      await _displayOnLG(errorMessage);
+      await _displayTextOverlayOnLG(errorMessage);
     }
   }
 
   Future<void> _handleLocationFromText(String userInput) async {
-    final placeRegex = RegExp(r'\b([A-Z][a-z]+(?:\s[A-Z][a-z]+)*)\b');
+    final placeRegex = RegExp(r'\\b([A-Z][a-z]+(?:\\s[A-Z][a-z]+)*)\\b');
     final matches = placeRegex.allMatches(userInput);
 
     if (matches.isNotEmpty) {
       for (final match in matches) {
         final place = match.group(0);
         if (place != null && place.isNotEmpty) {
-          debugPrint("🗺️ Attempting to fly to: $place");
+          debugPrint("\ud83d\uddfc Attempting to fly to: $place");
           await _sshService.searchPlace(place);
           break;
         }
       }
     } else {
-      debugPrint("⚠️ No obvious place found in text, trying fallback...");
+      debugPrint("\u26a0\ufe0f No obvious place found in text, trying fallback...");
 
       try {
         final locationPrompt = "Extract the location from this user input: \"$userInput\". Respond with only the place name.";
         final extractedPlace = await _geminiService.getResponse(locationPrompt);
         if (extractedPlace.isNotEmpty) {
-          debugPrint("📍 Gemini suggested: $extractedPlace");
+          debugPrint("\ud83d\udccd Gemini suggested: $extractedPlace");
           await _sshService.searchPlace(extractedPlace);
         }
       } catch (e) {
-        debugPrint("❌ Failed to extract location using Gemini: $e");
+        debugPrint("\u274c Failed to extract location using Gemini: $e");
       }
     }
   }
@@ -270,18 +297,33 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-            child: Row(
+            child: Wrap(
+              spacing: 12,
+              runSpacing: 8,
               children: [
                 ElevatedButton(
                   onPressed: _toggleKmlOverlay,
                   child: Text(_isKmlDisplayed ? "Remove Overlay" : "Display Overlay"),
                 ),
-                const SizedBox(width: 12),
                 ElevatedButton(
                   onPressed: () {
                     _sshService.searchPlace("India");
                   },
                   child: const Text("Fly to India"),
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    final lastAssistantMessage = _messages.lastWhere(
+                      (m) => m['role'] == 'assistant',
+                      orElse: () => {'content': ''},
+                    )['content']!;
+                    if (lastAssistantMessage.isNotEmpty) {
+                      _displayTextOverlayOnLG(lastAssistantMessage);
+                    } else {
+                      debugPrint("\u26a0\ufe0f No assistant response found to display.");
+                    }
+                  },
+                  child: const Text("Show Last Response on LG"),
                 ),
               ],
             ),
