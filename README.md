@@ -77,6 +77,136 @@ These allow displaying Gemini’s response in the corner of the Liquid Galaxy sc
 
 ![Screenshot 2025-04-18 182843](https://github.com/user-attachments/assets/ec859286-edf3-4523-8d14-f6dea90b9afd)
 
+## 🔐 SSH Integration for Remote Control
+The core functionality of this application revolves around its ability to remotely control the Liquid Galaxy (LG) system using Secure Shell (SSH) protocol. By leveraging Dart's built-in Process.run() function and third-party SSH packages, the app communicates directly with the LG master node (lg1) to send commands, upload data, and trigger visual actions.
+
+This allows the system to behave seamlessly and autonomously, transforming AI-generated insights into live visualizations on the Liquid Galaxy cluster without manual intervention.
+
+**🔁 Remote Actions Executed via SSH**
+➤ 1. Fly-To Location Command
+Command:
+
+```bash
+echo "search=Grand Canyon" > /tmp/query.txt
+```
+
+**Explanation:**
+
+This command writes a string (e.g., search=Grand Canyon) to the /tmp/query.txt file on the LG master node.
+
+Liquid Galaxy continuously monitors this file and uses its content to zoom into a location.
+
+As a result, once this file is updated, the LG system automatically animates a smooth camera transition to the specified place on Earth.
+
+This approach ensures instant geographical positioning on user request.
+
+➤ 2. Upload Generated KML File
+Command:
+
+```bash
+scp ai_response.kml lg@lg1:/var/www/html/kmls/
+```
+
+
+**Explanation:**
+
+This uses the Secure Copy Protocol (SCP) to transfer the generated KML (Keyhole Markup Language) file to the LG master node.
+
+The KML file is uploaded to the kmls/ directory inside the LG web server's root (/var/www/html).
+
+These files are then accessible to LG's built-in KML loader via HTTP (e.g., http://lg1:81/kmls/ai_response.kml).
+
+The content of the KML file typically contains AI responses formatted as screen overlays, which are rendered on the globe visualization in LG.
+
+➤ 3. Update KML Reference List
+Command:
+
+```bash
+echo "http://lg1:81/kmls/ai_response.kml" > /tmp/kmls.txt
+```
+
+
+**Explanation:**
+
+This command tells LG to reference the newly uploaded KML file.
+
+LG constantly listens to /tmp/kmls.txt to know which KMLs it should load and render.
+
+Once this file is updated with the correct URL, LG refreshes its visualization and displays the new overlay on the screen.
+
+This overlay can contain text, images, branding, or any interactive elements supported by KML.
+
+## 🚶 Step-by-Step Execution Walkthrough
+Below is a breakdown of how the full pipeline works — from user input to immersive visual output on Liquid Galaxy.
+
+**1️⃣ User Input**
+The user initiates a query through the Flutter application’s interface, such as:
+
+
+**"Tell me about the Colosseum in Rome."**
+This query is intended to:
+
+Ask the AI for contextual information
+
+Trigger a visual response that flies to the specified location and overlays a summary
+
+## 2️⃣ AI Processing (Gemini Pro)
+Once the user submits a query, the following steps occur:
+
+The app sends the query to the Google Gemini Pro AI model using the Gemini API.
+
+Gemini analyzes the natural language, detects the location (e.g., "Colosseum in Rome"), and understands the context.
+
+It then generates a rich and informative response, including historical facts, cultural importance, geographical data, and more.
+
+The AI’s response is then returned to the app for visualization preparation.
+
+## 3️⃣ App Execution & File Generation
+With the AI response in hand, the app performs the following actions:
+
+## 📄 KML File Creation
+The response is embedded in a KML file using the <ScreenOverlay> element, allowing it to be shown as an on-screen text block in LG.
+
+## 🌍 Fly-To Location Setup
+The destination is written into /tmp/query.txt to instruct LG to zoom into the appropriate place on Earth.
+
+## 🔐 SSH Uploads
+The app uses SSH and SCP to:
+
+Upload the KML file to /var/www/html/kmls/
+
+Update /tmp/kmls.txt with the KML URL
+
+Write the fly-to command into /tmp/query.txt
+
+All of these steps happen automatically in the background, creating a smooth and intelligent visualization workflow.
+
+## 4️⃣ Liquid Galaxy Visualization Output
+Once the files have been uploaded and references updated:
+
+**📍 The Liquid Galaxy cluster animates a fly-to motion to the geographic coordinates extracted by Gemini AI.**
+
+**🖼️ The KML response file is loaded, and the AI-generated response is displayed as an overlay in a designated part of the screen (typically top-left or bottom-left).**
+
+**✨ The user experiences a dynamic, narrated tour of the requested location, powered by AI and visualized in a stunning 3D globe interface.**
+
+**🧪 Sample AI Query Prompts**
+Try using the following prompts in your app to see the system in action:
+
+
+## 🧠 Prompt	💡 Effect
+**🏛️ Tell me about the Colosseum	Flies to Rome and overlays detailed facts**
+**🌋 Where is Mount Fuji?	Zooms into Japan and displays its history**
+**🗽 Give me facts about the Statue of Liberty	Centers on New York and shows cultural info**
+**🏞️ Zoom into the Grand Canyon and explain its formation	Animates to the Grand Canyon with geology facts**
+
+Each prompt triggers the following sequence:
+
+AI understands and processes the text
+
+Location coordinates are extracted
+
+Fly-to animation and overlay are rendered on LG
 
 
 ## Installation Setup
@@ -101,6 +231,10 @@ flutter pub get
 ```bash
 flutter run
 ```
+
+
+
+
 
 
 
