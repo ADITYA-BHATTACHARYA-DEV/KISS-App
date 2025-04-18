@@ -75,6 +75,32 @@ These allow displaying Gemini’s response in the corner of the Liquid Galaxy sc
 
 ![_- visual selection (27)](https://github.com/user-attachments/assets/aa30391c-f751-4ead-ae10-5a6fcb57e25d)
 
+![Screenshot 2025-04-18 182843](https://github.com/user-attachments/assets/ec859286-edf3-4523-8d14-f6dea90b9afd)
+
+
+
+## Installation Setup
+**Clone the Repository**
+```bash
+git clone https://github.com/your-username/lg-ai-assistant.git
+cd lg-ai-assistant
+```
+
+**Install Flutter**
+```bash
+git clone https://github.com/flutter/flutter.git -b stable
+export PATH="$PATH:`pwd`/flutter/bin"
+flutter doctor
+```
+**Install Dependencies**
+```bash
+flutter pub get
+```
+
+**Run the App on Device**
+```bash
+flutter run
+```
 
 
 
