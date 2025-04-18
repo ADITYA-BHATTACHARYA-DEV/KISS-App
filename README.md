@@ -80,9 +80,17 @@ These allow displaying Gemini’s response in the corner of the Liquid Galaxy sc
 </ScreenOverlay>
 ```
 
-![_- visual selection (27)](https://github.com/user-attachments/assets/aa30391c-f751-4ead-ae10-5a6fcb57e25d)
 
-![Screenshot 2025-04-18 182843](https://github.com/user-attachments/assets/ec859286-edf3-4523-8d14-f6dea90b9afd)
+<div align="center">
+  <img src="https://github.com/user-attachments/assets/aa30391c-f751-4ead-ae10-5a6fcb57e25d" alt="Centered Image" />
+</div>
+
+
+<div align="center">
+  <img src="https://github.com/user-attachments/assets/ec859286-edf3-4523-8d14-f6dea90b9afd" alt="Centered Image" />
+</div>
+
+
 
 ## 🔐 SSH Integration for Remote Control
 The core functionality of this application revolves around its ability to remotely control the Liquid Galaxy (LG) system using Secure Shell (SSH) protocol. By leveraging Dart's built-in Process.run() function and third-party SSH packages, the app communicates directly with the LG master node (lg1) to send commands, upload data, and trigger visual actions.
