@@ -1,3 +1,6 @@
+https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSxD3HaM3uzM9g-cpx5EghQVM6jMp56f59tHg&s
+
+
 # 🌐 Liquid Galaxy AI Assistant
 
 **An intelligent, interactive AI interface that lets you explore the world with natural language through Liquid Galaxy visualization.**
