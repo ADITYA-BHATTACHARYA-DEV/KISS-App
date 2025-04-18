@@ -82,8 +82,8 @@ These allow displaying Gemini’s response in the corner of the Liquid Galaxy sc
 ## Installation Setup
 **Clone the Repository**
 ```bash
-git clone https://github.com/your-username/lg-ai-assistant.git
-cd lg-ai-assistant
+git clone https://github.com/your-username/KISS-App.git
+cd KISS-App.git
 ```
 
 **Install Flutter**
