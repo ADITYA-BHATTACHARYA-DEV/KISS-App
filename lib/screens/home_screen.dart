@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:vermeni/connections/ssh.dart';
+import 'package:vermeni/screens/dashboard.dart';
 import 'package:vermeni/screens/menu.dart';
 import 'package:vermeni/screens/settings_page.dart';
 import 'package:vermeni/services/gemini_service.dart';
@@ -132,42 +133,85 @@ class _HomeScreenState extends State<HomeScreen> {
     _isKmlDisplayed ? _displayOnLG("Liquid Galaxy Assistant") : _removeTextOverlay();
   }
 
+
   void _sendMessage(String text) async {
-    if (text.isEmpty) return;
+  if (text.isEmpty) return;
+
+  setState(() {
+    _isProcessing = true;
+    _messages.add({'role': 'user', 'content': text});
+    _controller.clear();
+  });
+
+  WidgetsBinding.instance.addPostFrameCallback((_) {
+    _scrollController.animateTo(
+      _scrollController.position.maxScrollExtent,
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeOut,
+    );
+  });
+
+  try {
+    String response = await _geminiService.getResponse(text);
+
+    // Remove all occurrences of double asterisks (**) from the response
+    response = response.replaceAll('**', '');
 
     setState(() {
-      _isProcessing = true;
-      _messages.add({'role': 'user', 'content': text});
-      _controller.clear();
+      _messages.add({'role': 'assistant', 'content': response});
+      _isProcessing = false;
     });
 
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _scrollController.animateTo(
-        _scrollController.position.maxScrollExtent,
-        duration: const Duration(milliseconds: 300),
-        curve: Curves.easeOut,
-      );
+    await _displayTextOverlayOnLG(response);
+    await _handleLocationFromText(text);
+  } catch (e) {
+    final errorMessage = 'Sorry, I encountered an error: ${e.toString()}';
+    setState(() {
+      _messages.add({'role': 'assistant', 'content': errorMessage});
+      _isProcessing = false;
     });
 
-    try {
-      final response = await _geminiService.getResponse(text);
-      setState(() {
-        _messages.add({'role': 'assistant', 'content': response});
-        _isProcessing = false;
-      });
-
-      await _displayTextOverlayOnLG(response);
-      await _handleLocationFromText(text);
-    } catch (e) {
-      final errorMessage = 'Sorry, I encountered an error: ${e.toString()}';
-      setState(() {
-        _messages.add({'role': 'assistant', 'content': errorMessage});
-        _isProcessing = false;
-      });
-
-      await _displayTextOverlayOnLG(errorMessage);
-    }
+    await _displayTextOverlayOnLG(errorMessage);
   }
+}
+
+
+  // void _sendMessage(String text) async {
+  //   if (text.isEmpty) return;
+
+  //   setState(() {
+  //     _isProcessing = true;
+  //     _messages.add({'role': 'user', 'content': text});
+  //     _controller.clear();
+  //   });
+
+  //   WidgetsBinding.instance.addPostFrameCallback((_) {
+  //     _scrollController.animateTo(
+  //       _scrollController.position.maxScrollExtent,
+  //       duration: const Duration(milliseconds: 300),
+  //       curve: Curves.easeOut,
+  //     );
+  //   });
+
+  //   try {
+  //     final response = await _geminiService.getResponse(text);
+  //     setState(() {
+  //       _messages.add({'role': 'assistant', 'content': response});
+  //       _isProcessing = false;
+  //     });
+
+  //     await _displayTextOverlayOnLG(response);
+  //     await _handleLocationFromText(text);
+  //   } catch (e) {
+  //     final errorMessage = 'Sorry, I encountered an error: ${e.toString()}';
+  //     setState(() {
+  //       _messages.add({'role': 'assistant', 'content': errorMessage});
+  //       _isProcessing = false;
+  //     });
+
+  //     await _displayTextOverlayOnLG(errorMessage);
+  //   }
+  // }
 
   Future<void> _handleLocationFromText(String userInput) async {
     final placeRegex = RegExp(r'\b([A-Z][a-z]+(?:\s[A-Z][a-z]+)*)\b');
@@ -236,6 +280,17 @@ class _HomeScreenState extends State<HomeScreen> {
     MaterialPageRoute(builder: (context) => const ControlPanelScreen()),
   ),
 ),
+ IconButton(
+  icon: const Icon(
+    Icons.map_sharp,
+    color: Colors.white,  // Set the icon color to white
+  ),
+  onPressed: () => Navigator.push(
+    context,
+    MaterialPageRoute(builder: (context) => const NavigationDashboard()),
+  ),
+), 
+
 
           // IconButton(
           //   icon: Icon(
@@ -246,106 +301,123 @@ class _HomeScreenState extends State<HomeScreen> {
           // ),
         ],
       ),
-      drawer: Drawer(
-        width: MediaQuery.of(context).size.width * 0.8,
-        shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.horizontal(right: Radius.circular(16)),
+     drawer: Drawer(
+  width: MediaQuery.of(context).size.width * 0.8,
+  shape: const RoundedRectangleBorder(
+    borderRadius: BorderRadius.horizontal(right: Radius.circular(16)),
+  ),
+  child: ListView(
+    padding: EdgeInsets.zero,
+    children: [
+      DrawerHeader(
+        decoration: BoxDecoration(
+          color: colors.primary,
+          borderRadius: const BorderRadius.only(bottomRight: Radius.circular(16)),
         ),
-        child: ListView(
-          padding: EdgeInsets.zero,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            DrawerHeader(
-              decoration: BoxDecoration(
-                color: colors.primary,
-                borderRadius: const BorderRadius.only(bottomRight: Radius.circular(16)),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const CircleAvatar(
-                    radius: 30,
-                    backgroundColor: Colors.white,
-                    child: Icon(Icons.person, size: 40, color: Colors.deepPurple),
-                  ),
-                  const SizedBox(height: 10),
-                  Text('Aditya Bhattacharya',
-                      style: theme.textTheme.titleLarge?.copyWith(color: Colors.white)),
-                  Text('aditya@domain.com',
-                      style: theme.textTheme.bodyMedium?.copyWith(color: Colors.white70)),
-                ],
-              ),
+            const CircleAvatar(
+              radius: 30,
+              backgroundColor: Colors.white,
+              child: Icon(Icons.person, size: 40, color: Colors.deepPurple),
             ),
-            ListTile(
-              leading: const Icon(Icons.settings),
-              title: const Text('Settings'),
-              
-              onTap: () async {
-                final result = await Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const SettingsPage()),
-                );
-                if (result is bool) debugPrint("Connection status from SettingsPage: $result");
-              },
+            const SizedBox(height: 10),
+            Text(
+              'Aditya Bhattacharya',
+              style: theme.textTheme.titleLarge?.copyWith(color: Colors.white),
             ),
-            ExpansionTile(
-              leading: const Icon(Icons.control_camera),
-              title: const Text('Control Panel'),
-              childrenPadding: const EdgeInsets.only(left: 24),
-              children: [
-                _buildControlPanelItem(
-                  icon: Icons.flight,
-                  title: 'Fly to India',
-                  onTap: () => _sshService.searchPlace("India"),
-                ),
-                _buildControlPanelItem(
-                  icon: Icons.desktop_windows,
-                  title: 'Show Last Response',
-                  onTap: () {
-                    final last = _messages.lastWhere(
-                      (m) => m['role'] == 'assistant',
-                      orElse: () => {'content': ''},
-                    )['content']!;
-                    if (last.isNotEmpty) {
-                      _displayTextOverlayOnLG(last);
-                    } else {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('No assistant response found')),
-                      );
-                    }
-                  },
-                ),
-                _buildControlPanelItem(
-                  icon: Icons.clear,
-                  title: 'Remove Text Overlay',
-                  onTap: _removeTextOverlay,
-                ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: Row(
-                    children: [
-                      const Icon(Icons.layers, size: 20),
-                      const SizedBox(width: 24),
-                      const Text('Display KML Overlay'),
-                      const Spacer(),
-                      Switch(
-                        value: _isKmlDisplayed,
-                        activeColor: colors.primary,
-                        onChanged: (_) => _toggleKmlOverlay(),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-            const Divider(),
-            ListTile(
-              leading: const Icon(Icons.help),
-              title: const Text('Help & Feedback'),
-              onTap: () {},
+            Text(
+              'aditya@domain.com',
+              style: theme.textTheme.bodyMedium?.copyWith(color: Colors.white70),
             ),
           ],
         ),
       ),
+      ListTile(
+        leading: const Icon(Icons.settings),
+        title: const Text('Settings'),
+        onTap: () async {
+          final result = await Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const SettingsPage()),
+          );
+          if (result is bool) {
+            debugPrint("Connection status from SettingsPage: $result");
+          }
+        },
+      ),
+      // ✅ New Personal Dashboard Option
+      ListTile(
+        leading: const Icon(Icons.map_sharp, color: Colors.black87),
+        title: const Text('Personal Dashboard'),
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const NavigationDashboard()),
+          );
+        },
+      ),
+      ExpansionTile(
+        leading: const Icon(Icons.control_camera),
+        title: const Text('Control Panel'),
+        childrenPadding: const EdgeInsets.only(left: 24),
+        children: [
+          _buildControlPanelItem(
+            icon: Icons.flight,
+            title: 'Fly to India',
+            onTap: () => _sshService.searchPlace("India"),
+          ),
+          _buildControlPanelItem(
+            icon: Icons.desktop_windows,
+            title: 'Show Last Response',
+            onTap: () {
+              final last = _messages.lastWhere(
+                (m) => m['role'] == 'assistant',
+                orElse: () => {'content': ''},
+              )['content']!;
+              if (last.isNotEmpty) {
+                _displayTextOverlayOnLG(last);
+              } else {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('No assistant response found')),
+                );
+              }
+            },
+          ),
+          _buildControlPanelItem(
+            icon: Icons.clear,
+            title: 'Remove Text Overlay',
+            onTap: _removeTextOverlay,
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Row(
+              children: [
+                const Icon(Icons.layers, size: 20),
+                const SizedBox(width: 24),
+                const Text('Display KML Overlay'),
+                const Spacer(),
+                Switch(
+                  value: _isKmlDisplayed,
+                  activeColor: colors.primary,
+                  onChanged: (_) => _toggleKmlOverlay(),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+      const Divider(),
+      ListTile(
+        leading: const Icon(Icons.help),
+        title: const Text('Help & Feedback'),
+        onTap: () {},
+      ),
+    ],
+  ),
+),
+
       body: Stack(
         children: [
           Column(

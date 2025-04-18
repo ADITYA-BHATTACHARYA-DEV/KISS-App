@@ -42,6 +42,7 @@ dependencies:
   dartssh2: ^2.8.2
   shared_preferences: ^2.2.3
   font_awesome_flutter: ^10.8.0
+  syncfusion_flutter_charts: ^27.2.5
   
 dev_dependencies:
   flutter_test:
