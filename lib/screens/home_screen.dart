@@ -101,12 +101,19 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _displayTextOverlayOnLG(String text) async {
-    final wrappedText = text.replaceAllMapped(
-      RegExp(r'(.{1,60})(\s|$)'),
-      (match) => '${match.group(1)}\n',
-    );
+ 
+  final trimmedText = text.trim();
+  if (trimmedText.isEmpty) {
+    debugPrint("Empty text, not sending to LG");
+    return;
+  }
 
-    final kml = '''
+  final wrappedText = trimmedText.replaceAllMapped(
+    RegExp(r'(.{1,60})(\s|$)'),
+    (match) => '${match.group(1)}\n',
+  );
+
+  final kml = '''
 <?xml version="1.0" encoding="UTF-8"?>
 <kml xmlns="http://www.opengis.net/kml/2.2">
   <ScreenOverlay>
@@ -124,17 +131,16 @@ class _HomeScreenState extends State<HomeScreen> {
 </kml>
 ''';
 
-    await _sshService.clearAllKml();
-    await _sshService.sendKMLWithText(kml.replaceAll("'", "\\'"));
-  }
+  await _sshService.clearAllKml();
+  await _sshService.sendKMLWithText(kml.replaceAll("'", "\\'"));
+}
 
   void _toggleKmlOverlay() {
     setState(() => _isKmlDisplayed = !_isKmlDisplayed);
     _isKmlDisplayed ? _displayOnLG("Liquid Galaxy Assistant") : _removeTextOverlay();
   }
 
-
-  void _sendMessage(String text) async {
+void _sendMessage(String text) async {
   if (text.isEmpty) return;
 
   setState(() {
@@ -153,17 +159,19 @@ class _HomeScreenState extends State<HomeScreen> {
 
   try {
     String response = await _geminiService.getResponse(text);
+    response = response.replaceAll('**', '').trim(); 
 
-    // Remove all occurrences of double asterisks (**) from the response
-    response = response.replaceAll('**', '');
+    if (response.isNotEmpty) { 
+      setState(() {
+        _messages.add({'role': 'assistant', 'content': response});
+        _isProcessing = false;
+      });
 
-    setState(() {
-      _messages.add({'role': 'assistant', 'content': response});
-      _isProcessing = false;
-    });
-
-    await _displayTextOverlayOnLG(response);
-    await _handleLocationFromText(text);
+      await _displayTextOverlayOnLG(response);
+      await _handleLocationFromText(text);
+    } else {
+      setState(() => _isProcessing = false);
+    }
   } catch (e) {
     final errorMessage = 'Sorry, I encountered an error: ${e.toString()}';
     setState(() {
@@ -174,7 +182,6 @@ class _HomeScreenState extends State<HomeScreen> {
     await _displayTextOverlayOnLG(errorMessage);
   }
 }
-
 
   // void _sendMessage(String text) async {
   //   if (text.isEmpty) return;
@@ -260,9 +267,9 @@ class _HomeScreenState extends State<HomeScreen> {
       appBar: AppBar(
         title: const Text('Liquid Galaxy Assistant'),
          titleTextStyle: const TextStyle(
-    color: Colors.white,  // Set the title text color to white
+    color: Colors.white,  
     fontSize: 18, 
-     // Adjust the font size as needed
+     
   ),
         backgroundColor: colors.primary,
         elevation: 6,
@@ -273,7 +280,7 @@ class _HomeScreenState extends State<HomeScreen> {
          IconButton(
   icon: const Icon(
     Icons.dashboard,
-    color: Colors.white,  // Set the icon color to white
+    color: Colors.white,  
   ),
   onPressed: () => Navigator.push(
     context,
@@ -283,7 +290,7 @@ class _HomeScreenState extends State<HomeScreen> {
  IconButton(
   icon: const Icon(
     Icons.map_sharp,
-    color: Colors.white,  // Set the icon color to white
+    color: Colors.white, 
   ),
   onPressed: () => Navigator.push(
     context,
@@ -347,7 +354,7 @@ class _HomeScreenState extends State<HomeScreen> {
           }
         },
       ),
-      // ✅ New Personal Dashboard Option
+ 
       ListTile(
         leading: const Icon(Icons.map_sharp, color: Colors.black87),
         title: const Text('Personal Dashboard'),
@@ -442,11 +449,11 @@ class _HomeScreenState extends State<HomeScreen> {
   onPressed: () => _sendMessage("Show me famous landmarks"),
   icon: const Icon(
     Icons.auto_awesome,
-    color: Colors.white, // Set icon color to white
+    color: Colors.white, 
   ),
   label: const Text(
     'Try Example',
-    style: TextStyle(color: Colors.white), // Set text color to white
+    style: TextStyle(color: Colors.white), 
   ),
   backgroundColor: colors.primary,
 ),
@@ -517,7 +524,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           suffixIcon: IconButton(
                             icon: Icon(Icons.mic, color: colors.primary),
                             onPressed: () {
-                              // Voice input logic
+                             
                             },
                           ),
                         ),

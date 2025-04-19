@@ -637,7 +637,7 @@ class _NavigationDashboardState extends State<NavigationDashboard> {
           ),
           const SizedBox(height: 16),
           SizedBox(
-            height: 224, // Fixed height for the horizontal list
+            height: 224, 
             child: ListView.builder(
               scrollDirection: Axis.horizontal,
               physics: const BouncingScrollPhysics(),
@@ -645,7 +645,7 @@ class _NavigationDashboardState extends State<NavigationDashboard> {
               itemBuilder: (context, index) {
                 final content = _educationalContent[index];
                 return Container(
-                  width: 180, // Slightly reduced width for better fit
+                  width: 180, 
                   margin: EdgeInsets.only(
                     right: index == _educationalContent.length - 1 ? 0 : 16,
                     left: index == 0 ? 0 : 0,

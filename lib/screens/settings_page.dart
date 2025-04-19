@@ -14,9 +14,9 @@ class SettingsPage extends StatefulWidget {
 
 class _SettingsPageState extends State<SettingsPage> {
   bool connectionStatus = false;
-  bool isApiKeyValid = false; // Track API key validation status
+  bool isApiKeyValid = false; 
   late SSH ssh;
-  late GeminiService _geminiService; // Initialize GeminiService
+  late GeminiService _geminiService; 
 
   final TextEditingController _ipController = TextEditingController();
   final TextEditingController _usernameController = TextEditingController();
@@ -29,7 +29,7 @@ class _SettingsPageState extends State<SettingsPage> {
   void initState() {
     super.initState();
     ssh = SSH();
-    _geminiService = GeminiService(); // Initialize GeminiService
+    _geminiService = GeminiService(); 
     _loadSettings();
     _connectToLG();
   }
@@ -127,7 +127,7 @@ class _SettingsPageState extends State<SettingsPage> {
             gradient: LinearGradient(
               colors: [
                 Colors.black,
-                Color(0xFF4B0082), // Deep purple
+                Color(0xFF4B0082),
                 Colors.blueAccent,
               ],
               begin: Alignment.topCenter,
