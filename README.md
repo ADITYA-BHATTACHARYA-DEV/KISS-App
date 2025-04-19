@@ -66,9 +66,11 @@ echo "search=Eiffel Tower" > /tmp/query.txt
 ```
 
 
+<div align="center">
+  <img src="https://github.com/user-attachments/assets/e81ac6df-85f3-48da-802e-8756e5a5a2d4" alt="Centered Image"  height=500 width =500 />
+</div>
 
 
-![_- visual selection (29)](https://github.com/user-attachments/assets/e81ac6df-85f3-48da-802e-8756e5a5a2d4)
 
 
 
@@ -90,12 +92,12 @@ These allow displaying Gemini’s response in the corner of the Liquid Galaxy sc
 
 
 <div align="center">
-  <img src="https://github.com/user-attachments/assets/aa30391c-f751-4ead-ae10-5a6fcb57e25d" alt="Centered Image" />
+  <img src="https://github.com/user-attachments/assets/aa30391c-f751-4ead-ae10-5a6fcb57e25d" alt="Centered Image"  height=500 width =500 />
 </div>
 
 
 <div align="center">
-  <img src="https://github.com/user-attachments/assets/ec859286-edf3-4523-8d14-f6dea90b9afd" alt="Centered Image" />
+  <img src="https://github.com/user-attachments/assets/ec859286-edf3-4523-8d14-f6dea90b9afd" alt="Centered Image"   height=500 width =500/>
 </div>
 
 
