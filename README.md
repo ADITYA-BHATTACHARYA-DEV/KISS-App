@@ -65,6 +65,14 @@ KML (Keyhole Markup Language) is used to render the visual elements on the Liqui
 echo "search=Eiffel Tower" > /tmp/query.txt
 ```
 
+
+
+
+![_- visual selection (29)](https://github.com/user-attachments/assets/e81ac6df-85f3-48da-802e-8756e5a5a2d4)
+
+
+
+
 ## 🖼️ ScreenOverlay Elements
 
 These allow displaying Gemini’s response in the corner of the Liquid Galaxy screen using KML.
