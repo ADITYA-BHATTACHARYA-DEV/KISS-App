@@ -23,6 +23,7 @@ The assistant responds with detailed, AI-generated answers while simultaneously 
 
 ---
 
+
 ## 🧰 Tech Stack
 
 | Component           | Technology        | Role                                                                 |
@@ -91,13 +92,10 @@ These allow displaying Gemini’s response in the corner of the Liquid Galaxy sc
 ```
 
 
-<div align="center">
-  <img src="https://github.com/user-attachments/assets/aa30391c-f751-4ead-ae10-5a6fcb57e25d" alt="Centered Image"  height=500 width =500 />
-</div>
 
 
 <div align="center">
-  <img src="https://github.com/user-attachments/assets/ec859286-edf3-4523-8d14-f6dea90b9afd" alt="Centered Image"   height=500 width =500/>
+  <img src="https://github.com/user-attachments/assets/ec859286-edf3-4523-8d14-f6dea90b9afd" alt="Centered Image"   height=500 width =800/>
 </div>
 
 
@@ -232,6 +230,11 @@ AI understands and processes the text
 Location coordinates are extracted
 
 Fly-to animation and overlay are rendered on LG
+
+
+<div align="center">
+  <img src="https://github.com/user-attachments/assets/aa30391c-f751-4ead-ae10-5a6fcb57e25d" alt="Centered Image"  height=1000 width =500 />
+</div>
 
 
 ## Installation Setup
